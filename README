@@ -1,0 +1,10 @@
+#########################################
+Thanks for looking to run install Node.js
+
+1.) from project root run >node-waf configure
+2.) from project root run >node-waf
+3.) from project root run >node testnode
+4.) goto http://localhost:8888
+
+
+Make sure the Sketch is installed on the board.
