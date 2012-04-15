@@ -12,50 +12,42 @@
 #include <termios.h>  /* POSIX terminal control definitions */
 #include <sys/ioctl.h>
 #include <getopt.h>
+#include <time.h>
 
 using namespace v8;
 
-int bdrate=9600;
 int serialport_init(const char* serialport, int baud);
 int serialport_writebyte(int fd, uint8_t b);
 int serialport_write(int fd, const char* str);
-
+int baudrate = 9600;
+int fd = 0;
+int toggle = 0;
+int toggleLight(int value);
+int serialport_read_until(int fd, char* buf, char until);
 
 Handle<Value> Method(const Arguments& args) {
   //SendByte(bdrate,'1');
   HandleScope scope;
-  return scope.Close(String::New("world"));
+  toggleLight(toggle);
+  if(toggle == 1){
+     toggle = 0;
+     return scope.Close(String::New("Light Turned On"));
+  }
+  else{
+     toggle=1;
+     return scope.Close(String::New("Light Turned Off"));
+  }
 }
 
 void init(Handle<Object> target) {
-  int fd = 0;
-
-  char serialport[256];
-  int baudrate = B115200;  // default
-  char dat[8];
-  int rc,n;
-
-  baudrate = 9600;
-
+  char buffer[255];
   fd = serialport_init("/dev/ttyACM0", baudrate);
-  if(fd==-1) return;
-  
-  dat[0]='1';
-  
-  rc = serialport_write(fd, dat);
-  if(rc==-1) return;
-  
-  usleep(3000 * 1000 );
-
-  rc = serialport_write(fd, dat);
-  if(rc==-1) return;
-
-  usleep(3000 * 1000 );
-
-  rc = serialport_write(fd, dat);
-  if(rc==-1) return;
-
-  usleep(3000 * 1000 );
+  serialport_read_until(fd,buffer, '\n');
+//  printf("Message Recieved: %s\n", buffer);
+  //int rc = serialport_writebyte(fd, 1);
+  //char buffer2[255];
+  //serialport_read_until(fd,buffer2, '\n');
+  //printf("Message Recieved: %s\n", buffer2);
 
   target->Set(String::NewSymbol("hello"),
       FunctionTemplate::New(Method)->GetFunction());
@@ -63,10 +55,53 @@ void init(Handle<Object> target) {
 NODE_MODULE(helloworld, init)
 
 
+int toggleLight(int value){
+   int rc;
+  // printf("The value: %d\n", value);
+   if(value==0){
+    // printf("%s\n", "Turning Off");
+     rc = serialport_writebyte(fd, 0);
+     char buffer[255];
+     serialport_read_until(fd,buffer, '\n');
+    // printf("Message Recieved: %s\n", buffer);
+     if(rc==-1) return -1;
+   }
+   if(value==1){
+     //printf("%s\n", "Turning On");
+     rc = serialport_writebyte(fd, 1);
+     char buffer[255];
+     serialport_read_until(fd,buffer, '\n');
+     //printf("Message Recieved: %s\n", buffer);
+     if(rc==-1) return -1;
+   }
+   return rc;
+}
+
+int serialport_read_until(int fd, char* buf, char until)
+{
+    char b[1];
+    int i=0;
+    do { 
+        int n = read(fd, b, 1);  // read a char at a time
+        if( n==-1) {
+	        buf[0] = 0;  // null terminate the string
+		return -1;    // couldn't read
+	}
+        if( n==0 ) {
+            usleep( 10 * 1000 ); // wait 10 msec try again
+            continue;
+        }
+        buf[i] = b[0]; i++;
+    } while( (b[0] != until) || (i>250));
+
+    buf[i] = 0;  // null terminate the string
+    return 0;
+}
+
 int serialport_writebyte( int fd, uint8_t b)
 
 {
-
+    printf("Sending %d",b);
     int n = write(fd,&b,1);
 
     if( n!=1)

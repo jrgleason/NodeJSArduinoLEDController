@@ -12,18 +12,8 @@ void loop() {
   byte brightness;
   // check if data has been sent from the computer:
   if (Serial.available()>0) {
-    Serial.println("Serial Available....");
-    if(toggle){
-      Serial.println("Toggling On....");
-      turnOnLight();
-      toggle=false;
-    }
-    else{
-      Serial.println("Toggling Off....");
-      turnOffLight();
-      toggle=true;
-    }
     brightness = Serial.read();
+    Serial.println('this is what I am');
   }
 }
 
