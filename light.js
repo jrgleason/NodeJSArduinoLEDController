@@ -1,20 +1,11 @@
 var addon = require('./build/Release/helloworld');
 
-exports.toggle = function(request, response){
-	response.writeHead(200, {"Content-Type": "text/plain"});
-     	var value = "Command not recognized";
-	if('/led/toggle' == request.url){
-        	value=addon.hello();
-     	}	
-     	response.write(value);
-	response.end();
-	return value; 
+exports.toggle = function(req, res){
+  res.send(addon.hello());
 }
-exports.explain = function(request, response){
-        response.writeHead(200, {"Content-Type": "text/plain"});
-        response.write("Please use only /toggle/lcd");
-        response.end();
-
-        return addon.hello();
+exports.explain = function(req, res){
+  res.send('Please use only /toggle/lcd');
+  // not sure why you were invoking addon.hello() here, but
+  // you could still do that, no need for the return either
 }
 
