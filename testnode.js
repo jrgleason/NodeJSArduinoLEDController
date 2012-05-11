@@ -1,17 +1,9 @@
-var addon = require('./build/Release/helloworld');
-
-var http = require("http");
-
-http.createServer(function(request, response) {
-  if(!('/favicon.ico' == request.url)){
-     response.writeHead(200, {"Content-Type": "text/plain"});
-     if('/led/toggle' == request.url){
-     	response.write(addon.hello());
-     }
-     else{
-        response.write("Command not recognized");
-     }
-     response.end();
-  }
-}).listen(8888);
+var light = require('./light.js');
+var express = require('express');
+var app = express.createServer();
+console.log("Test");
+app.use(express.favicon());
+app.get('/',light.toString);
+app.get('/led/toggle', light.toggle);
+app.listen(8888);
 
